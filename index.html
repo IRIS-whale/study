@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>学习手帐 · 课表与每日任务</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>&#128218;</text></svg>" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-icon">&#128218;</span><span>学习手帐</span></div>
+    <nav class="tabs">
+      <button class="tab active" data-view="timetable">课表</button>
+      <button class="tab" data-view="tasks">每日任务</button>
+      <button class="tab" data-view="notes">随笔</button>
+      <button class="tab" data-view="countdown">倒计时</button>
+      <button class="tab" data-view="links">常用网址</button>
+    </nav>
+    <div class="today-chip" id="todayChip"></div>
+  </div>
+</header>
+
+<main>
+  <!-- 课表视图 -->
+  <section id="view-timetable" class="view active">
+    <div class="toolbar">
+      <div>
+        <h2>每周课表</h2>
+        <p class="sub">点击某一天的空白处即可添加课程，点击课程卡片可编辑或删除</p>
+      </div>
+      <button class="btn primary" id="addCourseBtn">＋ 添加课程</button>
+    </div>
+    <div class="tt-scroll">
+      <div id="tt" class="tt"></div>
+    </div>
+  </section>
+
+  <!-- 每日任务视图 -->
+  <section id="view-tasks" class="view">
+    <div class="toolbar">
+      <div>
+        <h2 id="dateTitle">每日任务</h2>
+        <p class="sub" id="dateSub"></p>
+      </div>
+      <div class="date-nav">
+        <button class="btn icon" id="prevDay" title="前一天">&#8249;</button>
+        <button class="btn" id="todayBtn">今天</button>
+        <button class="btn icon" id="nextDay" title="后一天">&#8250;</button>
+      </div>
+    </div>
+    <div class="tasks-layout">
+      <aside class="card day-courses">
+        <h3>&#128214; 当天课程</h3>
+        <ul id="dayCourseList" class="plain-list"></ul>
+      </aside>
+      <section class="card task-panel">
+        <div class="task-head">
+          <h3>&#128221; 任务清单</h3>
+          <span class="progress" id="taskProgress"></span>
+        </div>
+        <form id="taskForm" class="task-form" autocomplete="off">
+          <input id="taskInput" type="text" maxlength="120" placeholder="要做什么？输入后按回车添加…" />
+          <button class="btn primary" type="submit">添加</button>
+        </form>
+        <ul id="taskList" class="task-list"></ul>
+      </section>
+    </div>
+  </section>
+
+  <!-- 每日随笔视图 -->
+  <section id="view-notes" class="view">
+    <div class="toolbar">
+      <div>
+        <h2>每日随笔</h2>
+        <p class="sub">记录每天的想法、心情或小便签，随写随存</p>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn ghost" id="importEmojiBtn">导入emoji库</button>
+        <input type="file" id="emojiFile" accept=".json,.txt,application/json,text/plain" hidden />
+        <div class="date-nav">
+          <button class="btn icon" id="notePrev" title="前一天">&#8249;</button>
+          <input type="date" id="noteDate" class="date-input" />
+          <button class="btn" id="noteToday">今天</button>
+          <button class="btn icon" id="noteNext" title="后一天">&#8250;</button>
+        </div>
+      </div>
+    </div>
+    <div class="notes-layout">
+      <section class="card note-panel">
+        <div class="note-head">
+          <h3>&#9997;&#65039; 随笔</h3>
+          <span class="note-status" id="noteStatus"></span>
+        </div>
+        <div class="note-statusarea">
+          <div class="status-row">
+            <span class="status-key">心情</span>
+            <div class="emoji-strip" id="moodStrip"></div>
+            <button class="btn mini" id="addMoodBtn" title="添加自定义心情">&#65291;</button>
+          </div>
+          <div class="status-row">
+            <span class="status-key">天气</span>
+            <div class="emoji-strip" id="weatherStrip"></div>
+            <button class="btn mini" id="addWeatherBtn" title="添加自定义天气">&#65291;</button>
+          </div>
+        </div>
+        <textarea id="noteText" class="note-textarea" placeholder="今天想记点什么？就像随手写一张小便签…"></textarea>
+        <div class="note-foot">
+          <span class="note-count" id="noteCount"></span>
+          <button class="btn primary" id="noteSaveBtn">保存</button>
+        </div>
+      </section>
+      <aside class="card note-history">
+        <h3>&#128214; 最近随笔</h3>
+        <ul id="noteList" class="plain-list note-list"></ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- 重大事项倒计时视图 -->
+  <section id="view-countdown" class="view">
+    <div class="toolbar">
+      <div>
+        <h2>重大事项倒计时</h2>
+        <p class="sub">记录考试、截止日等重要日子，点击卡片可编辑或删除</p>
+      </div>
+      <button class="btn primary" id="addEventBtn">＋ 添加事项</button>
+    </div>
+    <div id="cdGrid"></div>
+  </section>
+
+
+  <!-- 常用网址视图 -->
+  <section id="view-links" class="view">
+    <div class="toolbar">
+      <div>
+        <h2>常用网址</h2>
+        <p class="sub">收藏常用网站，点击即可直达，支持分类与功能备注</p>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn ghost" id="addLinkCategoryBtn">＋ 添加分类</button>
+        <button class="btn primary" id="addLinkBtn">＋ 添加网址</button>
+      </div>
+    </div>
+    <div id="linkGrid" class="links-container"></div>
+  </section>
+
+  <!-- 桌面小组件视图 -->
+  <section id="view-widget" class="view widget-view">
+    <div class="widget-date" id="widgetDate"></div>
+    <div class="widget-block">
+      <h4>&#9203; 主要事项</h4>
+      <ul id="widgetCountdown" class="widget-list"></ul>
+    </div>
+    <div class="widget-block">
+      <h4>&#128214; 今天的课</h4>
+      <ul id="widgetCourses" class="widget-list"></ul>
+    </div>
+    <div class="widget-block">
+      <h4>&#9997;&#65039; 今日随笔</h4>
+      <div id="widgetNote" class="widget-note"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>数据保存在当前浏览器中，可随时导出备份</span>
+  <div class="foot-actions">
+    <button class="btn ghost small" id="demoBtn">载入示例</button>
+    <button class="btn ghost small" id="clearBtn">清空数据</button>
+    <button class="btn ghost small" id="exportBtn">导出备份</button>
+    <button class="btn ghost small" id="importBtn">导入备份</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden />
+    <button class="btn ghost small" id="importCoursesBtn">导入课表</button>
+    <input type="file" id="coursesFile" accept=".json,application/json" hidden />
+  </div>
+</footer>
+
+<!-- 倒计时事项编辑弹窗 -->
+<div class="overlay hidden" id="eventOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="eventModalTitle">添加事项</h3>
+    <form id="eventForm">
+      <input type="hidden" id="eventId" />
+      <div class="form-grid">
+        <label>事项名称 *
+          <input type="text" id="e_title" maxlength="60" required placeholder="例如：线性代数期末考试" />
+        </label>
+        <label>分类
+          <span class="cat-row">
+            <select id="e_category"></select>
+            <button type="button" class="btn mini" id="addCategoryBtn" title="添加自定义分类">＋</button>
+          </span>
+        </label>
+        <label>日期（选填，短期内待办可不填）
+          <input type="date" id="e_date" />
+        </label>
+        <label>备注
+          <input type="text" id="e_note" maxlength="120" placeholder="选填，例如：上午 08:00" />
+        </label>
+        <label>颜色
+          <select id="e_color"></select>
+        </label>
+        <label class="chk">桌面小组件
+          <span class="chk-row">
+            <input type="checkbox" id="e_widget" />
+            <span>在桌面小组件中显示</span>
+          </span>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn danger hidden" id="delEventBtn">删除事项</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="cancelEventBtn">取消</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 课程编辑弹窗 -->
+<div class="overlay hidden" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="courseModalTitle">添加课程</h3>
+    <form id="courseForm">
+      <input type="hidden" id="courseId" />
+      <div class="form-grid">
+        <label>课程名称 *
+          <input type="text" id="f_name" maxlength="40" required placeholder="例如：高等数学" />
+        </label>
+        <label>星期 *
+          <select id="f_day"></select>
+        </label>
+        <label>开始时间 *
+          <input type="time" id="f_start" required />
+        </label>
+        <label>结束时间 *
+          <input type="time" id="f_end" required />
+        </label>
+        <label>地点
+          <input type="text" id="f_place" maxlength="60" placeholder="例如：教学楼 A-203" />
+        </label>
+        <label>教师
+          <input type="text" id="f_teacher" maxlength="40" placeholder="选填" />
+        </label>
+        <label>备注（每行一条）
+          <textarea id="f_note" rows="3" maxlength="200" placeholder="每行一条备注，可多条（如：考试时间 / 单周上课 / 额外教室…）"></textarea>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn danger hidden" id="delCourseBtn">删除课程</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="cancelCourseBtn">取消</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 自定义表情弹窗 -->
+<div class="overlay hidden" id="emojiOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="emojiModalTitle">自定义心情</h3>
+    <form id="emojiForm">
+      <input type="hidden" id="emojiKind" />
+      <div class="form-grid">
+        <label>表情 *
+          <input type="text" id="emojiChar" maxlength="8" required placeholder="例如：&#128049;" />
+        </label>
+        <label>名称 *
+          <input type="text" id="emojiLabel" maxlength="20" required placeholder="例如：可爱" />
+        </label>
+      </div>
+      <div class="modal-actions">
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="cancelEmojiBtn">取消</button>
+        <button type="submit" class="btn primary">添加</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 常用网址编辑弹窗 -->
+<div class="overlay hidden" id="linkOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="linkModalTitle">添加网址</h3>
+    <form id="linkForm">
+      <input type="hidden" id="linkId" />
+      <div class="form-grid">
+        <label>网址名称 *
+          <input type="text" id="l_name" maxlength="40" required placeholder="例如：学校教务系统" />
+        </label>
+        <label>网址链接 *
+          <input type="text" id="l_url" required placeholder="例如：https://jwc.example.edu.cn" />
+        </label>
+        <label>分类
+          <span class="cat-row">
+            <select id="l_category"></select>
+            <button type="button" class="btn mini" id="addLinkCatBtn" title="添加自定义分类">＋</button>
+          </span>
+        </label>
+        <label>颜色
+          <select id="l_color"></select>
+        </label>
+        <label>功能备注
+          <input type="text" id="l_note" maxlength="80" placeholder="选填，例如：选课 / 查成绩 / 打印成绩单" />
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn danger hidden" id="delLinkBtn">删除网址</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="cancelLinkBtn">取消</button>
+        <button type="submit" class="btn primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="app.js"></script>
+</body>
+</html>

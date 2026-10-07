@@ -1,0 +1,18 @@
+# 浏览器临时数据（1GB+，不要上传）
+.edge-profile/
+.edge-profile2/
+
+# 日志与临时文件
+*.log
+set.err
+set.html
+_ls_test.html
+
+# 个人课表数据（想公开就删掉下面两行）
+课表导入.json
+课程表-OCR导入.json
+
+# 备份与系统文件
+*.bak
+Thumbs.db
+.DS_Store
